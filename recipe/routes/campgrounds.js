@@ -20,21 +20,25 @@ const validateCampground = (req,res,next) =>{
     }
 }
 
-
-router.get('/', catchAsync(campgrounds.index));
+router.route('/')
+    .get(catchAsync(campgrounds.index));
 router.get('/new',isLoggedIn, campgrounds.renderNewForm)
 
-router.post('/',isLoggedIn, validateCampground,catchAsync(async(campground.createCampgrounds)
+
+router.route('/:id')
+    .get(catchAsync(campground.showCampground))
+    .put(isLoggedIn,validateCampground, catchAsync(campgrounds.updateCampground))
+    .delete(isLoggedIn,isAuthor, catchAsync(campgrounds.deleteCampground))
+
+
+
+    .post(isLoggedIn, validateCampground,catchAsync(async(campground.createCampgrounds)
     // if(!req.body.campground) throw new ExpressError("Invalid campground data!",400);
     
+
 
     
   ))
 
-router.get('/:id', catchAsync(campground.showCampground))
-
-router.put('/:id',isLoggedIn,validateCampground, catchAsync(campgrounds.updateCampground));
-
-router.delete('/:id',isLoggedIn,isAuthor, catchAsync(campgrounds.deleteCampground));
 
 module.exports = router
