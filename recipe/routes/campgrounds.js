@@ -8,8 +8,9 @@ const Campground = require('../models/campground');
 const{isLoggedIn} = require('../middleware');
 const campground = require('../models/campground');
 const { updateCampground } = require('../../controllers/campgrounds.js');
-const mylter = require('multer')
-const upload = multer({dest: 'uploads/'})
+const multer = require('multer')
+const upload = multer( storage )
+const {storage} = require('../cloudinary')
 const validateCampground = (req,res,next) =>{
     const{error} = campgroundSchema.validate(req.body);
     if(error){
