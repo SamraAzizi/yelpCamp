@@ -5,11 +5,11 @@ const catchAsync = require("../utils/catchAsync");
 const { campgroundSchema } = require('../schema.js');
 const ExpressError =  require("../utils/expressError")
 const Campground = require('../models/campground');
-
 const{isLoggedIn} = require('../middleware');
 const campground = require('../models/campground');
 const { updateCampground } = require('../../controllers/campgrounds.js');
-
+const mylter = require('multer')
+const upload = multer({dest: 'uploads/'})
 const validateCampground = (req,res,next) =>{
     const{error} = campgroundSchema.validate(req.body);
     if(error){
@@ -23,6 +23,10 @@ const validateCampground = (req,res,next) =>{
 router.route('/')
     .get(catchAsync(campgrounds.index));
 router.get('/new',isLoggedIn, campgrounds.renderNewForm)
+    .post(upload.single('image'),(req,res) => {
+        res.send(req.body, req.file);
+        res.send("It worked!!")
+    })
 
 
 router.route('/:id')
