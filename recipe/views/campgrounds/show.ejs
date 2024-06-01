@@ -5,9 +5,11 @@
     <div class="col-6 ">
       <div id="carouselExampleControls" class="carousel slide " data-ride="carousel">
         <div class="carousel-inner">
-          <div class="carousel-item active">
-            <img src="..." class="d-block w-100" alt="...">
+          <% campground.images.forEach((img, i)=>{%>
+          <div class="carousel-item">
+            <img src="<% img.url %>" class="d-block w-100" alt="">
           </div>
+          <% }) %>
 
           <div class="carousel-item">
             <img src="..." alt="..." class="d-block w-100">
@@ -30,7 +32,7 @@
         <div class="card mb-3" style="width: 18rem;">
 
           <%  for(img of campground.images) {%>
-            <img src="<% campground.img.url %>" class="card-img-top" alt="...">
+            <img src="<% img.url %>" class="card-img-top" alt="...">
             <% } %>
             
             <div class="card-body">
