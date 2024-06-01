@@ -6,7 +6,7 @@
       <div id="carouselExampleControls" class="carousel slide " data-ride="carousel">
         <div class="carousel-inner">
           <% campground.images.forEach((img, i)=>{%>
-          <div class="carousel-item">
+          <div class="carousel-item <%= i === 0 ? 'active' : '' %>">
             <img src="<% img.url %>" class="d-block w-100" alt="">
           </div>
           <% }) %>
@@ -19,6 +19,7 @@
           </div>
 
         </div>
+        <% if(campground.images.length >1 ){ %>
 
         <a href="#carouselExampleControls" role="button" class="carousel-control-prev"
         <span class="carousel-control-prev-icon" aria-hidden="true"></span>>
@@ -28,6 +29,7 @@
       <a href="#carouselExampleControls" role="button" class="carousel-control-next"
       <span class="carousel-control-next-icon" aria-hidden="true"></span>
       ></a>
+      <% } %>
       </div>
         <div class="card mb-3" style="width: 18rem;">
 
