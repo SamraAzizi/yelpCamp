@@ -163,29 +163,3 @@
       background-size: 30px auto;
     }
   }
-  
-  @media screen and (-ms-high-contrast: active) {
-    .starability-basic {
-      width: auto;
-    }
-    .starability-basic > input {
-      position: static;
-      margin-right: 0;
-      opacity: 1;
-    }
-    .starability-basic .input-no-rate {
-      display: none;
-    }
-    .starability-basic > label {
-      display: inline;
-      float: none;
-      width: auto;
-      height: auto;
-      font-size: 1em;
-      color: inherit;
-      background: none;
-    }
-    .starability-basic > label::before, .starability-basic > label::after {
-      display: none;
-    }
-  }
