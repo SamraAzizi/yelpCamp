@@ -1,31 +1,28 @@
-if(process.env.NODE_ENV !== 'production'){
-    require('dotenv').config()
-}  
+if (process.env.NODE_ENV !== "production") {
+    require('dotenv').config();
+}
 
 const express = require('express');
 const path = require('path');
 const mongoose = require('mongoose');
-const methodOverride = require('method-override');
-const catchAsync = require("./utils/catchAsync");
-const Joi = require("joi");
-const { campgroundSchema, reviewSchema } = require('./schema.js');
-const ExpressError =  require("./utils/expressError")
-const Campground = require('./models/campground');
-const Review = require('./models/review')
-const ejsMate = require('ejs-mate')
+const ejsMate = require('ejs-mate');
 const session = require('express-session');
-const flash = require('connect-flash')
-const campgrounds = require('./routes/campgrounds')
-const userRoutes = require('.routes/users');
-const reviews = require('./routes/reviews')
-const passport = require('passport')
-const localStrategy = require('passport-local')
+const flash = require('connect-flash');
+const ExpressError = require('./utils/ExpressError');
+const methodOverride = require('method-override');
+const passport = require('passport');
+const LocalStrategy = require('passport-local');
 const User = require('./models/user');
-const { deserialize } = require('v8');
 
+const userRoutes = require('./routes/users');
+const campgroundRoutes = require('./routes/campgrounds');
+const reviewRoutes = require('./routes/reviews');
 
-mongoose.connect('mongodb://127.0.0.1:27017/yelp-camp', {
-   
+mongoose.connect('mongodb://localhost:27017/yelp-camp', {
+    useNewUrlParser: true,
+    useCreateIndex: true,
+    useUnifiedTopology: true,
+    useFindAndModify: false
 });
 
 const db = mongoose.connection;
@@ -36,68 +33,63 @@ db.once("open", () => {
 
 const app = express();
 
-app.engine('ejs', ejsMate)
+app.engine('ejs', ejsMate);
 app.set('view engine', 'ejs');
-
-app.set('views', path.join(__dirname, 'views'))
+app.set('views', path.join(__dirname, 'views'));
 
 app.use(express.urlencoded({ extended: true }));
 app.use(methodOverride('_method'));
-app.use(express.static(path.join(__dirname, 'public')))
+app.use(express.static(path.join(__dirname, 'public')));
 
+// Session configuration
 const sessionConfig = {
-    secret: 'haseyhus',
-    unsave: false,
-    saveUninitialized : true,
+    secret: process.env.SESSION_SECRET || 'thisshouldbeabettersecret!',
+    resave: false,
+    saveUninitialized: true,
     cookie: {
         httpOnly: true,
-        expires: Date.now() + 1000 * 60 * 60 * 24 * 7,
-    
+        secure: process.env.NODE_ENV === 'production', // Only over HTTPS in production
+        expires: Date.now() + 1000 * 60 * 60 * 24 * 7, // 7 days expiration
         maxAge: 1000 * 60 * 60 * 24 * 7
     }
-}
+};
 
-app.use(session(sessionConfig));
-app.use(flash);
+app.use(session(sessionConfig)); // Use session middleware
 
-app.use(passport.initialize())
-app.use(passport.session())
-passport.use(new localStrategy(User.authenticate()))
+app.use(flash());
 
+app.use(passport.initialize());
+app.use(passport.session());
+passport.use(new LocalStrategy(User.authenticate()));
 
-passport.serializeUser(User.serializeUser())
-passport.deserializeUser(User, deserializeUser())
+passport.serializeUser(User.serializeUser());
+passport.deserializeUser(User.deserializeUser());
 
-
-app.use((req,res,next)=>{
-    res.locals.currentUsers = req.user;
+app.use((req, res, next) => {
+    res.locals.currentUser = req.user;
     res.locals.success = req.flash('success');
-    res.locals.success = req.flash('error')
+    res.locals.error = req.flash('error');
     next();
-})
+});
 
-
-
-app.use('/', userRoutes)
-app.use('/campgrounds', campgrounds)
-app.use('/campgrounds/:id/reviews', reviews)
+app.use('/', userRoutes);
+app.use('/campgrounds', campgroundRoutes);
+app.use('/campgrounds/:id/reviews', reviewRoutes);
 
 app.get('/', (req, res) => {
-    res.render('home')
+    res.render('home');
 });
 
-
-
-app.all("*", (req, res, next) => {
-    next(new ExpressError("page not found!", 404));
+app.all('*', (req, res, next) => {
+    next(new ExpressError('Page Not Found', 404));
 });
 
-app.use((err, req, res, next) =>{
-    const {statusCode = 500} = err;
-    if(!err.message) err.message = "oh no something went wrong! "
-    res.status(statusCode).render('error',{err})
-})
+app.use((err, req, res, next) => {
+    const { statusCode = 500 } = err;
+    if (!err.message) err.message = 'Oh No, Something Went Wrong!';
+    res.status(statusCode).render('error', { err });
+});
 
 app.listen(3000, () => {
-    console.log('Serving on port 3000')
-})
+    console.log('Serving on port 3000');
+});
