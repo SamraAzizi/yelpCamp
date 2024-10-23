@@ -1,6 +1,5 @@
 const Campground = require('../models/campground');
-const { Client } = require("@googlemaps/google-maps-services-js"); // Google Maps SDK
-const client = new Client({}); // Google Maps client
+const axios = require('axios'); // Use axios for making HTTP requests
 const { cloudinary } = require("../cloudinary");
 
 module.exports.index = async (req, res) => {
@@ -14,20 +13,30 @@ module.exports.renderNewForm = (req, res) => {
 
 module.exports.createCampground = async (req, res, next) => {
     try {
-        // Google Maps Geocoding API
-        const geoData = await client.geocode({
+        // LocationIQ Geocoding API
+        const { location } = req.body.campground; // Extract location from request body
+        const geoResponse = await axios.get(`https://us1.locationiq.com/v1/search.php`, {
             params: {
-                address: req.body.campground.location,
-                key: process.env.GOOGLE_MAPS_API_KEY // Use Google Maps API key
+                key: process.env.LOCATION_IQ_API_KEY, // Use LocationIQ API key
+                q: location,
+                format: 'json'
             }
         });
 
         const campground = new Campground(req.body.campground);
-        if (geoData.data.results.length > 0) {
-            campground.geometry = geoData.data.results[0].geometry.location;
+        if (geoResponse.data.length > 0) {
+            campground.geometry = {
+                type: 'Point',
+                coordinates: [geoResponse.data[0].lon, geoResponse.data[0].lat] // Set coordinates based on LocationIQ response
+            };
+        } else {
+            // Handle case when no results are found
+            req.flash('error', 'Could not find location coordinates. Please try again.');
+            return res.redirect('/campgrounds/new');
         }
+
         campground.images = req.files.map(f => ({ url: f.path, filename: f.filename }));
-        campground.author = req.user._id;
+        campground.author = req.user._id; // Set the author field here
         await campground.save();
         console.log(campground);
         req.flash('success', 'Successfully made a new campground!');
@@ -45,7 +54,7 @@ module.exports.showCampground = async (req, res) => {
         populate: {
             path: 'author'
         }
-    }).populate('author');
+    }).populate('author'); // Ensure author is populated
     if (!campground) {
         req.flash('error', 'Cannot find that campground!');
         return res.redirect('/campgrounds');

@@ -1,21 +1,24 @@
 const mongoose = require('mongoose');
-const Review = require('./review')
+const Review = require('./review');
 const Schema = mongoose.Schema;
 
-
-// https://res.cloudinary.com/douqbebwk/image/upload/w_300/v1600113904/YelpCamp/gxgle1ovzd2f3dgcpass.png
-
+// Schema for storing image data
 const ImageSchema = new Schema({
     url: String,
     filename: String
 });
 
+// Virtual for thumbnail image
 ImageSchema.virtual('thumbnail').get(function () {
     return this.url.replace('/upload', '/upload/w_200');
 });
 
+// Main Campground schema
 const CampgroundSchema = new Schema({
-    title: String,
+    title: {
+        type: String,
+        required: true, // Adding validation for title
+    },
     images: [ImageSchema],
     geometry: {
         type: {
@@ -28,12 +31,22 @@ const CampgroundSchema = new Schema({
             required: true
         }
     },
-    price: Number,
-    description: String,
-    location: String,
+    price: {
+        type: Number,
+        required: true, // Adding validation for price
+    },
+    description: {
+        type: String,
+        required: true, // Adding validation for description
+    },
+    location: {
+        type: String,
+        required: true, // Adding validation for location
+    },
     author: {
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        required: true // Ensure author is required
     },
     reviews: [
         {
@@ -43,16 +56,16 @@ const CampgroundSchema = new Schema({
     ]
 });
 
-
-
+// Middleware to delete reviews when a campground is deleted
 CampgroundSchema.post('findOneAndDelete', async function (doc) {
     if (doc) {
         await Review.deleteMany({
             _id: {
                 $in: doc.reviews
             }
-        })
+        });
     }
-})
+});
 
+// Export the model
 module.exports = mongoose.model('Campground', CampgroundSchema);
